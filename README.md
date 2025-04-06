@@ -1,2 +1,2 @@
 # palavrasaudio2
-jogo infantil para montagem de palavras com as letras maiusculas
+Jogo infantil para montagem de palavras com as letras maiusculas. 
