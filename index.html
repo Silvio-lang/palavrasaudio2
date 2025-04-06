@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jogo de Palavras</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 3vw;
+    }
+    h1 {
+      text-align: center;
+      font-size: 6vw;
+    }
+    #letras {
+      margin-bottom: 4vw;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .letra {
+      display: inline-block;
+      padding: 1.5vw;
+      margin: 0.8vw;
+      border: 1px solid #333;
+      width: 6vw;
+      text-align: center;
+      cursor: pointer;
+      background-color: #eee;
+      user-select: none;
+      font-size: 4vw;
+    }
+    .letra.especial {
+      background-color: #ccc;
+    }
+    .letra.selecionada {
+      background-color: #ffa500 !important;
+    }
+    .espaco {
+      display: inline-block;
+      width: 2vw;
+    }
+    #palavra {
+      border: 2px dashed #aaa;
+      padding: 2vw;
+      margin: 0 auto 4vw auto;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 90vw;
+    }
+    .caixa-letra {
+      display: inline-block;
+      width: 6vw;
+      height: 6vw;
+      margin: 0.8vw;
+      border: 1px solid #aaa;
+      text-align: center;
+      line-height: 6vw;
+      font-size: 4vw;
+      cursor: pointer;
+      background-color: #f9f9f9;
+    }
+    .botoes {
+      text-align: center;
+      margin-bottom: 2vw;
+    }
+    button {
+      padding: 1.2vw 2.5vw;
+      font-size: 4vw;
+      cursor: pointer;
+      margin: 1.5vw;
+    }
+
+    @media (min-width: 768px) {
+      h1 {
+        font-size: 2.3em;
+      }
+      .letra {
+        width: 32px;
+        padding: 6px;
+        font-size: 16px;
+      }
+      #palavra {
+        width: max-content;
+      }
+      .caixa-letra {
+        width: 32px;
+        height: 32px;
+        line-height: 32px;
+        font-size: 16px;
+      }
+      button {
+        font-size: 13px;
+        padding: 7px 16px;
+        margin: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1 id="titulo">Jogo das Palavras</h1>
+  <div id="letras"></div>
+  <div id="palavra"></div>
+  <div class="botoes">
+    <button onclick="falarPalavra()">🔊 Pronunciar</button>
+  </div>
+
+  <script>
+    const letrasNormais = 'ABCDEFGHIJLMNOPQRSTUVXZ'.split('');
+    const letrasEspeciais = 'ÀÁÂÃÇÉÊÍÓÔÕÚÜ'.split('').sort();
+
+    const letrasContainer = document.getElementById('letras');
+    const palavraContainer = document.getElementById('palavra');
+
+    let letraSelecionada = null;
+
+    function criarBotaoLetra(letra, especial = false) {
+      const span = document.createElement('span');
+      span.textContent = letra;
+      span.classList.add('letra');
+      if (especial) span.classList.add('especial');
+      span.onclick = () => {
+        const jaSelecionada = span.classList.contains('selecionada');
+        document.querySelectorAll('.letra').forEach(l => l.classList.remove('selecionada'));
+        if (!jaSelecionada) {
+          span.classList.add('selecionada');
+          letraSelecionada = letra;
+        } else {
+          letraSelecionada = null;
+        }
+      };
+      letrasContainer.appendChild(span);
+    }
+
+    letrasNormais.forEach(letra => criarBotaoLetra(letra));
+    letrasEspeciais.forEach(letra => criarBotaoLetra(letra, true));
+
+    function inicializarCaixasVazias() {
+      for (let i = 0; i < 20; i++) {
+        const span = document.createElement('span');
+        span.classList.add('caixa-letra');
+        span.onclick = () => {
+          if (letraSelecionada) {
+            span.textContent = letraSelecionada;
+            span.style.backgroundColor = '#fff';
+          } else {
+            span.textContent = '';
+            span.style.backgroundColor = '#f9f9f9';
+          }
+        };
+        palavraContainer.appendChild(span);
+      }
+    }
+
+    function falarPalavra() {
+      const letras = [...palavraContainer.querySelectorAll('.caixa-letra')];
+      const palavra = letras.map(el => el.textContent).join('').trim();
+      if (palavra.length > 0) {
+        const utterance = new SpeechSynthesisUtterance(palavra);
+        utterance.lang = 'pt-BR';
+        utterance.rate = 0.8;
+        speechSynthesis.speak(utterance);
+      }
+    }
+
+    function colorirTituloAleatoriamente() {
+      const titulo = document.getElementById('titulo');
+      const texto = titulo.innerText;
+      titulo.innerHTML = '';
+      [...texto].forEach(letra => {
+        const span = document.createElement('span');
+        span.textContent = letra;
+        span.style.color = `hsl(${Math.floor(Math.random() * 360)}, 80%, 50%)`;
+        titulo.appendChild(span);
+      });
+    }
+
+    inicializarCaixasVazias();
+    colorirTituloAleatoriamente();
+  </script>
+</body>
+</html>
