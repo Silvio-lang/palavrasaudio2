@@ -1,4 +1,4 @@
-# palavrasaudio2
-Jogo infantil para montagem de palavras com as letras maiusculas. 
-aberto dia 6 de abril de 2025
+# conversa 2 interlucutores
+resposta a prompts enviados 
+aberto dia 21 de maio de 2025
 fim
