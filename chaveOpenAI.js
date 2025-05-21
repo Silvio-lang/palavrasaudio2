@@ -1,0 +1,1 @@
+const chave = "lkjskl";
