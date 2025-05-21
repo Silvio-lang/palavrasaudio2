@@ -1,98 +1,37 @@
-document.addEventListener('DOMContentLoaded', function() {
-    const promptForm = document.getElementById('promptForm');
-    const userPromptInput = document.getElementById('userPrompt');
-    const fileNameInput = document.getElementById('fileName');
-    const statusDiv = document.getElementById('status');
-    const responseDiv = document.getElementById('response');
-    const previousPromptsDiv = document.getElementById('previousPrompts');
+// Defina a chave da API da OpenAI
+const API_KEY = "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";  // Substitua com a sua chave de API
 
-    // Exibir os prompts anteriores assim que a página for carregada
-    displayPreviousPrompts();
+// Função para fazer a requisição à OpenAI
+function fetchOpenAIResponse(prompt) {
+    // Configuração da requisição para a API
+    fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${API_KEY}`
+        },
+        body: JSON.stringify({
+            model: "gpt-3.5-turbo",  // Ou o modelo que você está utilizando
+            messages: [
+                { role: "user", content: prompt }
+            ]
+        })
+    })
+    .then(response => response.json())  // Converte a resposta para JSON
+    .then(data => {
+        // Aqui você pode processar a resposta da API
+        console.log("Resposta da OpenAI:", data);
 
-    promptForm.addEventListener('submit', async function(event) {
-        event.preventDefault();
-
-        const userPrompt = userPromptInput.value.trim();
-        const fileName = fileNameInput.value.trim();
-
-        if (!userPrompt || !fileName) {
-            statusDiv.textContent = 'Preencha todos os campos!';
-            return;
+        // Exemplo de exibição da resposta no console
+        if (data.choices && data.choices[0] && data.choices[0].message) {
+            console.log("Resposta do modelo:", data.choices[0].message.content);
+        } else {
+            console.log("Não foi possível obter uma resposta válida.");
         }
-
-        // Exibir "Processando..." ao iniciar o envio do prompt
-        statusDiv.textContent = 'Processando...';
-
-        try {
-            const fileContent = await fetchFileContent(fileName);
-            const responseText = await fetchPromptResponse(userPrompt, fileContent);
-            responseDiv.textContent = responseText;
-
-            // Salvar o prompt e atualizar a lista
-            savePrompt(userPrompt);
-            displayPreviousPrompts();
-
-            // Remover o "Processando..." após a resposta ser exibida
-            statusDiv.textContent = '';
-
-        } catch (error) {
-            statusDiv.textContent = 'Erro: ' + error.message;
-        }
+    })
+    .catch(error => {
+        // Tratamento de erro
+        console.error('Erro ao fazer a requisição:', error);
     });
+}
 
-    async function fetchFileContent(fileName) {
-        const response = await fetch(fileName);
-        if (!response.ok) throw new Error('Arquivo não encontrado: ' + fileName);
-        return await response.text();
-    }
-
-    async function fetchPromptResponse(userPrompt, fileContent) {
-//        const apiKey = await loadApiKey();
-        const apiKey = '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';
-        const apiUrl = `https://api.openai.com/v1/chat/completions`;
-
-        const response = await fetch(apiUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`,
-            },
-            body: JSON.stringify({
-                model: "gpt-4", 
-                messages: [
-                    { role: "system", content: "Você é um assistente inteligente." },
-                    { role: "user", content: `${fileContent}\n\nPergunta: ${userPrompt}` }
-                ],
-                max_tokens: 1000
-            })
-        });
-
-        const data = await response.json();
-        return data.choices?.[0]?.message?.content || 'Sem resposta válida.';
-    }
-
-    async function loadApiKey() {
-//        const response = await fetch('chaveOpenAI.js');
-        const text = await response.text();
-        const match = text.match(/const\s+minhachave\s*=\s*'([^']+)'/);
-        if (!match) throw new Error('Chave da API não encontrada');
-        return match[1];
-    }
-
-    // Função para salvar o prompt no localStorage
-    function savePrompt(prompt) {
-        let prompts = JSON.parse(localStorage.getItem('previousPrompts') || '[]');
-        if (!prompts.includes(prompt)) {
-            prompts = [prompt, ...prompts].slice(0, 5); // Limita a 5 itens
-            localStorage.setItem('previousPrompts', JSON.stringify(prompts));
-        }
-    }
-
-    // Função para exibir os prompts anteriores
-    function displayPreviousPrompts() {
-        const prompts = JSON.parse(localStorage.getItem('previousPrompts') || '[]');
-        previousPromptsDiv.innerHTML = prompts.length > 0 
-            ? `<h3>Prompts Anteriores:</h3><ul>${prompts.map(p => `<li>${p}</li>`).join('')}</ul>`
-            : '<p>Nenhum prompt anterior.</p>';
-    }
-});
