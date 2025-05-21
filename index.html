@@ -1,184 +1,109 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Jogo de Palavras</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 3vw;
-    }
-    h1 {
-      text-align: center;
-      font-size: 6vw;
-    }
-    #letras {
-      margin-bottom: 4vw;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    .letra {
-      display: inline-block;
-      padding: 1.5vw;
-      margin: 0.8vw;
-      border: 1px solid #333;
-      width: 6vw;
-      text-align: center;
-      cursor: pointer;
-      background-color: #eee;
-      user-select: none;
-      font-size: 4vw;
-    }
-    .letra.especial {
-      background-color: #ccc;
-    }
-    .letra.selecionada {
-      background-color: #ffa500 !important;
-    }
-    .espaco {
-      display: inline-block;
-      width: 2vw;
-    }
-    #palavra {
-      border: 2px dashed #aaa;
-      padding: 2vw;
-      margin: 0 auto 4vw auto;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      width: 90vw;
-    }
-    .caixa-letra {
-      display: inline-block;
-      width: 6vw;
-      height: 6vw;
-      margin: 0.8vw;
-      border: 1px solid #aaa;
-      text-align: center;
-      line-height: 6vw;
-      font-size: 4vw;
-      cursor: pointer;
-      background-color: #f9f9f9;
-    }
-    .botoes {
-      text-align: center;
-      margin-bottom: 2vw;
-    }
-    button {
-      padding: 1.2vw 2.5vw;
-      font-size: 4vw;
-      cursor: pointer;
-      margin: 1.5vw;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interpretação de Texto com OpenAI</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    @media (min-width: 768px) {
-      h1 {
-        font-size: 2.3em;
-      }
-      .letra {
-        width: 32px;
-        padding: 6px;
-        font-size: 16px;
-      }
-      #palavra {
-        width: max-content;
-      }
-      .caixa-letra {
-        width: 32px;
-        height: 32px;
-        line-height: 32px;
-        font-size: 16px;
-      }
-      button {
-        font-size: 13px;
-        padding: 7px 16px;
-        margin: 8px;
-      }
-    }
-  </style>
+        #promptForm {
+            width: 100%;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        /* Estilo da resposta */
+        #response {
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            user-select: text !important;  /* Torna o texto dentro de #response selecionável */
+            cursor: text !important; /* Cursor de seleção (linha vertical) */
+            padding: 10px;
+            white-space: pre-wrap;
+            width: 100%;
+        }
+
+        #response p {
+            margin-bottom: 5px;  /* Espaço entre os parágrafos */
+        }
+
+        #previousPrompts {
+            margin-top: 5px;
+            border: 1px solid #eee;
+            user-select: text !important;  /* Torna o texto dentro de #previousPrompts selecionável */
+            cursor: text !important; /* Cursor de seleção (linha vertical) */
+            padding: 5px;
+            width: 100%;
+        }
+
+        #previousPrompts ul {
+            list-style-type: disc;
+            margin-left: 20px;
+        }
+
+        /* Estilo para o botão Enviar */
+        button {
+            padding: 10px;
+            border-radius: 4px;
+            background-color: #ccc;
+            color: black;
+            font-size: 16px;
+            width: 200px;
+            border: 1px solid black;
+            cursor: pointer;  /* Mantém o cursor de clique tradicional */
+            box-sizing: border-box;
+        }
+
+        /* Garantir que a tela seja responsiva para dispositivos móveis */
+        @media (max-width: 600px) {
+            textarea, button, #response, #previousPrompts {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
-  <h1 id="titulo">Jogo das Palavras</h1>
-  <div id="letras"></div>
-  <div id="palavra"></div>
-  <div class="botoes">
-    <button onclick="falarPalavra()">🔊 Pronunciar</button>
-  </div>
+    <h1>Interpretação de Texto com OpenAI</h1>
+    <h2>Arquivos disponíveis</h2>
+    <ul id="fileList">
+        <li>Gerenciar Riscos Investimento.txt</li>
+        <li>Descrição Trocatroca.txt</li>
+    </ul>
 
-  <script>
-    const letrasNormais = 'ABCDEFGHIJLMNOPQRSTUVXZ'.split('');
-    const letrasEspeciais = 'ÀÁÂÃÇÉÊÍÓÔÕÚÜ'.split('').sort();
+    <form id="promptForm">
+        <div>
+            <label for="fileName">Nome do Arquivo (TXT ou PDF):</label>
+            <input type="text" id="fileName" name="fileName" required placeholder="exemplo.txt ou exemplo.pdf">
+        </div>
+        <div>
+            <label for="userPrompt">Seu Prompt:</label>
+            <textarea id="userPrompt" name="userPrompt" rows="4" required placeholder="Faça sua pergunta sobre o arquivo..."></textarea>
+        </div>
+        <button type="submit">Enviar</button> <!-- Botão de envio de prompt -->
+    </form>
 
-    const letrasContainer = document.getElementById('letras');
-    const palavraContainer = document.getElementById('palavra');
+    <div id="status"></div>
+    <div id="response"></div> <!-- Exibição da resposta da API -->
+    <div id="previousPrompts">
+        <h3>Prompts Anteriores:</h3>
+        <p>Nenhum prompt anterior gravado.</p>
+    </div>
 
-    let letraSelecionada = null;
+    <script src="chaveOpenAI.js"></script>
+    <script src="scriptOpenAI.js"></script>
 
-    function criarBotaoLetra(letra, especial = false) {
-      const span = document.createElement('span');
-      span.textContent = letra;
-      span.classList.add('letra');
-      if (especial) span.classList.add('especial');
-      span.onclick = () => {
-        const jaSelecionada = span.classList.contains('selecionada');
-        document.querySelectorAll('.letra').forEach(l => l.classList.remove('selecionada'));
-        if (!jaSelecionada) {
-          span.classList.add('selecionada');
-          letraSelecionada = letra;
-        } else {
-          letraSelecionada = null;
-        }
-      };
-      letrasContainer.appendChild(span);
-    }
-
-    letrasNormais.forEach(letra => criarBotaoLetra(letra));
-    letrasEspeciais.forEach(letra => criarBotaoLetra(letra, true));
-
-    function inicializarCaixasVazias() {
-      for (let i = 0; i < 20; i++) {
-        const span = document.createElement('span');
-        span.classList.add('caixa-letra');
-        span.onclick = () => {
-          if (letraSelecionada) {
-            span.textContent = letraSelecionada;
-            span.style.backgroundColor = '#fff';
-          } else {
-            span.textContent = '';
-            span.style.backgroundColor = '#f9f9f9';
-          }
-        };
-        palavraContainer.appendChild(span);
-      }
-    }
-
-    function falarPalavra() {
-      const letras = [...palavraContainer.querySelectorAll('.caixa-letra')];
-      const palavra = letras.map(el => el.textContent).join('').trim();
-      if (palavra.length > 0) {
-        const utterance = new SpeechSynthesisUtterance(palavra);
-        utterance.lang = 'pt-BR';
-        utterance.rate = 0.8;
-        speechSynthesis.speak(utterance);
-      }
-    }
-
-    function colorirTituloAleatoriamente() {
-      const titulo = document.getElementById('titulo');
-      const texto = titulo.innerText;
-      titulo.innerHTML = '';
-      [...texto].forEach(letra => {
-        const span = document.createElement('span');
-        span.textContent = letra;
-        span.style.color = `hsl(${Math.floor(Math.random() * 360)}, 80%, 50%)`;
-        titulo.appendChild(span);
-      });
-    }
-
-    inicializarCaixasVazias();
-    colorirTituloAleatoriamente();
-  </script>
 </body>
 </html>
