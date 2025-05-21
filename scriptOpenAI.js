@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function loadApiKey() {
-        const response = await fetch('chaveOpenAI.js');
+//        const response = await fetch('chaveOpenAI.js');
         const text = await response.text();
         const match = text.match(/const\s+minhachave\s*=\s*'([^']+)'/);
         if (!match) throw new Error('Chave da API não encontrada');
