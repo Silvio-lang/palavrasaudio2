@@ -1,4 +1,4 @@
-# conversa 2 interlucutores
-resposta a prompts enviados 
-aberto dia 21 de maio de 2025
+# Conversa 2 Interlucutores
+Resposta a prompts enviados - 
+Aberto dia 21 de maio de 2025
 fim
